@@ -57,6 +57,9 @@ QVariant VariantMapTableModel::data(const QModelIndex &index, int role) const
     if (!index.isValid()) {
         return QVariant();
     }
+    if (role > Qt::UserRole) {
+        return data(this->index(index.row(), role - Qt::UserRole), Qt::DisplayRole);
+    }
     int id = idByRow(index.row());
     QVariantMap rowData = _dataHash.value(id);
     return _colums.at(index.column())->colData(rowData, role);
