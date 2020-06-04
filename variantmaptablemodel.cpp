@@ -84,6 +84,15 @@ Qt::ItemFlags VariantMapTableModel::flags(const QModelIndex &index) const
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
 }
 
+QHash<int, QByteArray> VariantMapTableModel::roleNames() const
+{
+    auto r = QAbstractTableModel::roleNames();
+    for (int i = 0; i < _colums.size(); ++i) {
+        r.insert(Qt::UserRole + i, _colums.at(i)->name().toUtf8());
+    }
+    return r;
+}
+
 SimpleColumn::SimpleColumn(QString name) : AbstractColumn (name)
 {
 
