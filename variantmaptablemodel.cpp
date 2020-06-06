@@ -1,5 +1,19 @@
 #include "variantmaptablemodel.h"
 
+#include "QQmlEngine"
+#include <QDebug>
+
+bool registerMe()
+{
+    qmlRegisterType<VariantMapTableModel>(VariantMapTableModel::MODULE_NAME.toUtf8(), 1, 0, "VariantMapTableModel");
+    return true;
+}
+
+const QString VariantMapTableModel::MODULE_NAME = "VariantMapTable";
+
+const bool VariantMapTableModel::IS_QML_REG = registerMe();
+
+
 VariantMapTableModel::VariantMapTableModel(QObject *parent) : QAbstractTableModel (parent)
 {
 
@@ -8,12 +22,18 @@ VariantMapTableModel::VariantMapTableModel(QObject *parent) : QAbstractTableMode
 void VariantMapTableModel::registerColumn(AbstractColumn *column)
 {
     // todo: проверки на повторяемость и тд
-    _colums.append(column);
+    _columns.append(column);
+}
+
+void VariantMapTableModel::registerRole(AbstractRole *role)
+{
+    // todo: проверки на повторяемость и тд
+    _roles.append(role);
 }
 
 void VariantMapTableModel::addRow(QVariantMap rowData)
 {
-    // "id" можно вынести в отдельным параметром
+    // "id" можно вынести в отдельный параметр
     int id = rowData.value("id").toInt();
     beginInsertRows(QModelIndex(), _rowIndex.count(), _rowIndex.count());
     _rowIndex.append(id);
@@ -28,7 +48,8 @@ int VariantMapTableModel::idByRow(int row) const
 
 int VariantMapTableModel::colByName(QString name) const
 {
-    for (int col = 0; col < _colums.count(); ++col) {
+    qDebug() << __PRETTY_FUNCTION__ << "вроде не нужна";
+    for (int col = 0; col < _columns.count(); ++col) {
         if (nameByCol(col) == name)
             return col;
     }
@@ -37,19 +58,44 @@ int VariantMapTableModel::colByName(QString name) const
 
 QString VariantMapTableModel::nameByCol(int col) const
 {
-    return _colums.at(col)->name();
+    return _columns.at(col)->name();
+}
+
+bool VariantMapTableModel::getWithHeading() const
+{
+    return _withHeading;
+}
+
+void VariantMapTableModel::setWithHeading(bool value)
+{
+    _withHeading = value;
+}
+
+int VariantMapTableModel::calcRow(const QModelIndex &index) const
+{
+    return index.row() - _withHeading;
+}
+
+bool VariantMapTableModel::getForListViewFormat() const
+{
+    return _forListViewFormat;
+}
+
+void VariantMapTableModel::setForListViewFormat(bool forListViewFormat)
+{
+    _forListViewFormat = forListViewFormat;
 }
 
 int VariantMapTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
-    return _rowIndex.count();
+    return _rowIndex.count() + _withHeading;
 }
 
 int VariantMapTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return _colums.count();
+    return _columns.count();
 }
 
 QVariant VariantMapTableModel::data(const QModelIndex &index, int role) const
@@ -57,21 +103,33 @@ QVariant VariantMapTableModel::data(const QModelIndex &index, int role) const
     if (!index.isValid()) {
         return QVariant();
     }
-    if (role > Qt::UserRole) {
-        return data(this->index(index.row(), role - Qt::UserRole), Qt::DisplayRole);
+    if (role > Qt::UserRole && _forListViewFormat) {
+        return data(this->index(calcRow(index), role - Qt::UserRole), Qt::DisplayRole);
     }
-    int id = idByRow(index.row());
+    if (calcRow(index) < 0) {
+        if (role == Qt::DisplayRole) {
+            return _columns.at(index.column())->name();
+        } else {
+            return QVariant();
+        }
+    }
+    int id = idByRow(calcRow(index));
     QVariantMap rowData = _dataHash.value(id);
-    return _colums.at(index.column())->colData(rowData, role);
+    if (role == Qt::DisplayRole) {
+        return _columns.at(index.column())->colData(rowData, role);
+    } else {
+        qDebug() << rowData[_rolesId[role]];
+        return rowData[_rolesId[role]];
+    }
 }
 
 bool VariantMapTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (!index.isValid()) {
+    if (!index.isValid() || calcRow(index) < 0) {
         return false;
     }
     if (role == Qt::EditRole) {
-        int id = idByRow(index.row());
+        int id = idByRow(calcRow(index));
         _dataHash[id].insert(nameByCol(index.column()), value);
         emit dataChanged(index, index);
         return true;
@@ -89,14 +147,17 @@ Qt::ItemFlags VariantMapTableModel::flags(const QModelIndex &index) const
 
 QHash<int, QByteArray> VariantMapTableModel::roleNames() const
 {
-    auto r = QAbstractTableModel::roleNames();
-    for (int i = 0; i < _colums.size(); ++i) {
-        r.insert(Qt::UserRole + i, _colums.at(i)->name().toUtf8());
+    _rolesId = QAbstractTableModel::roleNames();
+    for (int i = 0; i < _columns.size(); ++i) {
+        _rolesId.insert(Qt::UserRole + i, _columns.at(i)->name().toUtf8());
     }
-    return r;
+    for (int i = 0; i < _roles.size(); ++i) {
+        _rolesId.insert(Qt::UserRole + _columns.size() + i, _roles.at(i)->name().toUtf8());
+    }
+    return _rolesId;
 }
 
-SimpleColumn::SimpleColumn(QString name) : AbstractColumn (name)
+SimpleColumn::SimpleColumn(QString name) : AbstractColumnRole (name)
 {
 
 }
@@ -109,12 +170,12 @@ QVariant SimpleColumn::colData(const QVariantMap &rowData, int role)
     return rowData.value(name());
 }
 
-AbstractColumn::AbstractColumn(QString name) : _name(name)
+AbstractColumnRole::AbstractColumnRole(QString name) : _name(name)
 {
 
 }
 
-FullnameColumn::FullnameColumn(QString name) : AbstractColumn (name)
+FullnameColumn::FullnameColumn(QString name) : AbstractColumnRole (name)
 {
 
 }

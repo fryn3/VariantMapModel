@@ -3,18 +3,21 @@
 
 #include <QAbstractTableModel>
 
-class AbstractColumn
+class AbstractColumnRole
 {
 public:
-    AbstractColumn(QString name);
-    virtual ~AbstractColumn() = default;
+    AbstractColumnRole(QString name);
+    virtual ~AbstractColumnRole() = default;
     QString name() { return _name; }
     virtual QVariant colData(const QVariantMap &rowData, int role = Qt::DisplayRole) = 0;
 private:
     QString _name;
 };
 
-class SimpleColumn : public AbstractColumn
+using AbstractColumn = AbstractColumnRole;
+using AbstractRole = AbstractColumnRole;
+
+class SimpleColumn : public AbstractColumnRole
 {
 public:
     SimpleColumn(QString name);
@@ -22,7 +25,7 @@ public:
     QVariant colData(const QVariantMap &rowData, int role) override;
 };
 
-class FullnameColumn : public AbstractColumn
+class FullnameColumn : public AbstractColumnRole
 {
 public:
     FullnameColumn(QString name);
@@ -34,17 +37,30 @@ class VariantMapTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
+    static const QString MODULE_NAME;   // "VariantMapTable"
+    static const bool IS_QML_REG;
+
     VariantMapTableModel(QObject *parent = nullptr);
     void registerColumn(AbstractColumn *column);
+    void registerRole(AbstractRole *role);
     void addRow(QVariantMap rowData);
 
     int idByRow(int row) const;
     int colByName(QString name) const;
     QString nameByCol(int col) const;
+    bool getWithHeading() const;
+    void setWithHeading(bool value);
+    bool getForListViewFormat() const;
+    void setForListViewFormat(bool forListViewFormat);
+    int calcRow(const QModelIndex &index) const;
 private:
     QList<int> _rowIndex;
     QHash<int, QVariantMap> _dataHash;
-    QList<AbstractColumn*> _colums;
+    QList<AbstractColumn*> _columns;
+    QList<AbstractRole*> _roles;
+    mutable QHash<int, QByteArray> _rolesId;
+    bool _withHeading = false;
+    bool _forListViewFormat = false;
 
 public:
     int rowCount(const QModelIndex &parent) const override;
