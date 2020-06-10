@@ -14,10 +14,10 @@ const QString VariantMapTableModel::MODULE_NAME = "VariantMapTable";
 const bool VariantMapTableModel::IS_QML_REG = registerMe();
 
 
-VariantMapTableModel::VariantMapTableModel(QObject *parent) : QAbstractTableModel (parent)
-{
+VariantMapTableModel::VariantMapTableModel(QObject *parent) : QAbstractTableModel (parent) { }
 
-}
+VariantMapTableModel::VariantMapTableModel(bool isList, bool autoId, bool withHeading, QObject *parent)
+    : QAbstractTableModel (parent), _forListViewFormat(isList), _autoId(autoId), _withHeading(withHeading) { }
 
 void VariantMapTableModel::registerColumn(AbstractColumn *column)
 {
@@ -27,14 +27,14 @@ void VariantMapTableModel::registerColumn(AbstractColumn *column)
 
 void VariantMapTableModel::registerRole(AbstractRole *role)
 {
+    // todo: можно избавиться от этой ф-ции, а добавлять все лишние роли при addRow
     // todo: проверки на повторяемость и тд
     _roles.append(role);
 }
 
 void VariantMapTableModel::addRow(QVariantMap rowData)
 {
-    // "id" можно вынести в отдельный параметр
-    int id = rowData.value("id").toInt();
+    int id = _autoId ? ++_idRow : rowData.value(_idStr).toInt();
     beginInsertRows(QModelIndex(), _rowIndex.count(), _rowIndex.count());
     _rowIndex.append(id);
     _dataHash.insert(id, rowData);
@@ -76,6 +76,31 @@ int VariantMapTableModel::calcRow(const QModelIndex &index) const
     return index.row() - _withHeading;
 }
 
+bool VariantMapTableModel::isHeadingRow(const QModelIndex &index) const
+{
+    return calcRow(index) < 0;
+}
+
+bool VariantMapTableModel::autoId() const
+{
+    return _autoId;
+}
+
+void VariantMapTableModel::setAutoId(bool autoId)
+{
+    _autoId = autoId;
+}
+
+QString VariantMapTableModel::getIdStr() const
+{
+    return _idStr;
+}
+
+void VariantMapTableModel::setIdStr(const QString &id)
+{
+    _idStr = id;
+}
+
 bool VariantMapTableModel::getForListViewFormat() const
 {
     return _forListViewFormat;
@@ -106,7 +131,7 @@ QVariant VariantMapTableModel::data(const QModelIndex &index, int role) const
     if (role > Qt::UserRole && _forListViewFormat) {
         return data(this->index(calcRow(index), role - Qt::UserRole), Qt::DisplayRole);
     }
-    if (calcRow(index) < 0) {
+    if (isHeadingRow(index)) {
         if (role == Qt::DisplayRole) {
             return _columns.at(index.column())->name();
         } else {
@@ -125,7 +150,7 @@ QVariant VariantMapTableModel::data(const QModelIndex &index, int role) const
 
 bool VariantMapTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (!index.isValid() || calcRow(index) < 0) {
+    if (!index.isValid() || isHeadingRow(index)) {
         return false;
     }
     if (role == Qt::EditRole) {

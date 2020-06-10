@@ -41,6 +41,7 @@ public:
     static const bool IS_QML_REG;
 
     VariantMapTableModel(QObject *parent = nullptr);
+    VariantMapTableModel(bool isList, bool autoId = false, bool withHeading = false, QObject *parent = nullptr);
     void registerColumn(AbstractColumn *column);
     void registerRole(AbstractRole *role);
     void addRow(QVariantMap rowData);
@@ -48,19 +49,27 @@ public:
     int idByRow(int row) const;
     int colByName(QString name) const;
     QString nameByCol(int col) const;
-    bool getWithHeading() const;
-    void setWithHeading(bool value);
     bool getForListViewFormat() const;
     void setForListViewFormat(bool forListViewFormat);
+    bool autoId() const;
+    void setAutoId(bool autoId);
+    bool getWithHeading() const;
+    void setWithHeading(bool value);
+    QString getIdStr() const;
+    void setIdStr(const QString &id);
     int calcRow(const QModelIndex &index) const;
+    bool isHeadingRow(const QModelIndex &index) const;
 private:
     QList<int> _rowIndex;
     QHash<int, QVariantMap> _dataHash;
     QList<AbstractColumn*> _columns;
     QList<AbstractRole*> _roles;
     mutable QHash<int, QByteArray> _rolesId;
-    bool _withHeading = false;
+    QString _idStr = "id";  ///< строковое представление ключа
+    uint _idRow = 0;
     bool _forListViewFormat = false;
+    bool _autoId = false;
+    bool _withHeading = false;
 
 public:
     int rowCount(const QModelIndex &parent) const override;
