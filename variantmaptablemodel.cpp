@@ -2,6 +2,9 @@
 
 #include "QQmlEngine"
 #include <QDebug>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 bool registerMe()
 {
@@ -14,10 +17,12 @@ const QString VariantMapTableModel::MODULE_NAME = "VariantMapTable";
 const bool VariantMapTableModel::IS_QML_REG = registerMe();
 
 
-VariantMapTableModel::VariantMapTableModel(QObject *parent) : QAbstractTableModel (parent) { }
+VariantMapTableModel::VariantMapTableModel(QObject *parent)
+    : QAbstractTableModel (parent) { }
 
 VariantMapTableModel::VariantMapTableModel(bool isList, bool autoId, bool withHeading, QObject *parent)
-    : QAbstractTableModel (parent), _forListViewFormat(isList), _autoId(autoId), _withHeading(withHeading) { }
+    : QAbstractTableModel (parent), _forListViewFormat(isList), _autoId(autoId),
+      _withHeading(withHeading) { }
 
 void VariantMapTableModel::registerColumn(AbstractColumn *column)
 {
@@ -39,6 +44,12 @@ void VariantMapTableModel::addRow(QVariantMap rowData)
     _rowIndex.append(id);
     _dataHash.insert(id, rowData);
     endInsertRows();
+}
+
+QVariantMap VariantMapTableModel::getRowData(int row) const
+{
+    int id = idByRow(row);
+    return _dataHash.value(id);
 }
 
 int VariantMapTableModel::idByRow(int row) const
@@ -79,6 +90,34 @@ int VariantMapTableModel::calcRow(const QModelIndex &index) const
 bool VariantMapTableModel::isHeadingRow(const QModelIndex &index) const
 {
     return calcRow(index) < 0;
+}
+
+QByteArray VariantMapTableModel::toJson(bool isBin) const
+{
+    QJsonArray jArr;
+    for (int row = 0; row < _rowIndex.count(); ++row) {
+        auto rowData = getRowData(row);
+        QJsonObject jRow = QJsonObject::fromVariantMap(rowData);
+        jArr.append(jRow);
+    }
+    if (isBin)
+        return QCborValue::fromJsonValue(jArr).toCbor();
+    return QJsonDocument(jArr).toJson();
+}
+
+void VariantMapTableModel::fromJson(QByteArray buff, bool isBin)
+{
+    QJsonArray jArr;
+    if (isBin) {
+        QCborValue cbor = QCborValue::fromCbor(buff);
+        jArr = cbor.toJsonValue().toArray();
+    } else {
+        jArr = QJsonDocument::fromJson(buff).array();
+    }
+    for (const auto& jRowRef: jArr) {
+        QVariantMap item = jRowRef.toObject().toVariantMap();
+        addRow(item);
+    }
 }
 
 bool VariantMapTableModel::autoId() const
@@ -138,8 +177,7 @@ QVariant VariantMapTableModel::data(const QModelIndex &index, int role) const
             return QVariant();
         }
     }
-    int id = idByRow(calcRow(index));
-    QVariantMap rowData = _dataHash.value(id);
+    QVariantMap rowData = getRowData(calcRow(index));
     if (role == Qt::DisplayRole) {
         return _columns.at(index.column())->colData(rowData, role);
     } else {

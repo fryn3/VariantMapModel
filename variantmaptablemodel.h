@@ -46,6 +46,7 @@ public:
     void registerRole(AbstractRole *role);
     void addRow(QVariantMap rowData);
 
+    QVariantMap getRowData(int row) const;
     int idByRow(int row) const;
     int colByName(QString name) const;
     QString nameByCol(int col) const;
@@ -59,6 +60,8 @@ public:
     void setIdStr(const QString &id);
     int calcRow(const QModelIndex &index) const;
     bool isHeadingRow(const QModelIndex &index) const;
+    QByteArray toJson(bool isBin) const;
+    void fromJson(QByteArray buff, bool isBin);
 private:
     QList<int> _rowIndex;
     QHash<int, QVariantMap> _dataHash;
