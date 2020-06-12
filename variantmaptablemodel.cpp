@@ -92,7 +92,7 @@ bool VariantMapTableModel::isHeadingRow(const QModelIndex &index) const
     return calcRow(index) < 0;
 }
 
-QByteArray VariantMapTableModel::toJson(bool isBin) const
+QJsonValue VariantMapTableModel::toJson() const
 {
     QJsonArray jArr;
     for (int row = 0; row < _rowIndex.count(); ++row) {
@@ -100,23 +100,46 @@ QByteArray VariantMapTableModel::toJson(bool isBin) const
         QJsonObject jRow = QJsonObject::fromVariantMap(rowData);
         jArr.append(jRow);
     }
-    if (isBin)
-        return QCborValue::fromJsonValue(jArr).toCbor();
-    return QJsonDocument(jArr).toJson();
+    return QJsonValue(jArr);
 }
 
-void VariantMapTableModel::fromJson(QByteArray buff, bool isBin)
+QCborValue VariantMapTableModel::toCbor() const
 {
-    QJsonArray jArr;
-    if (isBin) {
-        QCborValue cbor = QCborValue::fromCbor(buff);
-        jArr = cbor.toJsonValue().toArray();
-    } else {
-        jArr = QJsonDocument::fromJson(buff).array();
+    return QCborValue::fromJsonValue(toJson());
+}
+
+QByteArray VariantMapTableModel::toByteArray(bool isJson) const
+{
+    if (isJson) {
+        return QJsonDocument(toJson().toObject()).toJson();
     }
+    return toCbor().toCbor();
+}
+
+void VariantMapTableModel::fromJson(QJsonValue jValue)
+{
+    QJsonArray jArr = jValue.toArray();
     for (const auto& jRowRef: jArr) {
         QVariantMap item = jRowRef.toObject().toVariantMap();
         addRow(item);
+    }
+}
+
+void VariantMapTableModel::fromCbor(QCborValue cborValue)
+{
+    QJsonArray jArr = cborValue.toJsonValue().toArray();
+    for (const auto& jRowRef: jArr) {
+        QVariantMap item = jRowRef.toObject().toVariantMap();
+        addRow(item);
+    }
+}
+
+void VariantMapTableModel::fromByteArray(QByteArray buff, bool isJson)
+{
+    if (isJson) {
+        fromJson(QJsonDocument::fromJson(buff).array());
+    } else {
+        fromCbor(QCborValue::fromCbor(buff));
     }
 }
 

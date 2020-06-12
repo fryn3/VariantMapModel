@@ -60,8 +60,12 @@ public:
     void setIdStr(const QString &id);
     int calcRow(const QModelIndex &index) const;
     bool isHeadingRow(const QModelIndex &index) const;
-    QByteArray toJson(bool isBin) const;
-    void fromJson(QByteArray buff, bool isBin);
+    QJsonValue toJson() const;
+    QCborValue toCbor() const;
+    QByteArray toByteArray(bool isJson) const;
+    void fromJson(QJsonValue jValue);
+    void fromCbor(QCborValue cborValue);
+    void fromByteArray(QByteArray buff, bool isJson);
 private:
     QList<int> _rowIndex;
     QHash<int, QVariantMap> _dataHash;
