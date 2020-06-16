@@ -224,6 +224,9 @@ bool VariantMapModel::setData(const QModelIndex &index, const QVariant &value, i
     if (!index.isValid() || isHeadingRow(index)) {
         return false;
     }
+    if (role >= Qt::UserRole) {
+        return setData(this->index(calcRow(index), role - Qt::UserRole), value, Qt::EditRole);
+    }
     if (role == Qt::EditRole) {
         int id = idByRow(calcRow(index));
         _dataHash[id].insert(nameByCol(index.column()), value);
