@@ -45,6 +45,9 @@ public:
     void registerColumn(AbstractColumn *column);
     void registerRole(AbstractRole *role);
     void addRow(QVariantMap rowData);
+    void removeId(int id);
+    void removeRow(int row);
+    void removeAllRows();
 
     QVariantMap getRowData(int row) const;
     int idByRow(int row) const;

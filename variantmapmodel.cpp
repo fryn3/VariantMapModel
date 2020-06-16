@@ -46,6 +46,24 @@ void VariantMapModel::addRow(QVariantMap rowData)
     endInsertRows();
 }
 
+void VariantMapModel::removeId(int id)
+{
+    removeRow(_rowIndex.indexOf(id));
+}
+
+void VariantMapModel::removeRow(int row)
+{
+    Q_ASSERT(row > 0 && row < _rowIndex.size());
+    int id = _rowIndex.takeAt(row);
+    _dataHash.remove(id);
+}
+
+void VariantMapModel::removeAllRows()
+{
+    _rowIndex.clear();
+    _dataHash.clear();
+}
+
 QVariantMap VariantMapModel::getRowData(int row) const
 {
     int id = idByRow(row);
