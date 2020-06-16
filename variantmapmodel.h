@@ -46,7 +46,6 @@ public:
     void registerRole(AbstractRole *role);
     void addRow(QVariantMap rowData);
     void removeId(int id);
-    void removeRow(int row);
     void removeAllRows();
 
     QVariantMap getRowData(int row) const;
@@ -88,6 +87,7 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     QHash<int, QByteArray> roleNames() const override;
+    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 };
 
 #endif // VARIANTMAPMODEL_H

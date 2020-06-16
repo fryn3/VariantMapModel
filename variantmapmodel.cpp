@@ -51,17 +51,9 @@ void VariantMapModel::removeId(int id)
     removeRow(_rowIndex.indexOf(id));
 }
 
-void VariantMapModel::removeRow(int row)
-{
-    Q_ASSERT(row > 0 && row < _rowIndex.size());
-    int id = _rowIndex.takeAt(row);
-    _dataHash.remove(id);
-}
-
 void VariantMapModel::removeAllRows()
 {
-    _rowIndex.clear();
-    _dataHash.clear();
+    removeRows(0, _rowIndex.size());
 }
 
 QVariantMap VariantMapModel::getRowData(int row) const
@@ -259,6 +251,20 @@ QHash<int, QByteArray> VariantMapModel::roleNames() const
         _rolesId.insert(Qt::UserRole + _columns.size() + i, _roles.at(i)->name().toUtf8());
     }
     return _rolesId;
+}
+
+bool VariantMapModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+    beginRemoveRows(parent, row, row + count - 1);
+    if (row < 0 || row + count > _rowIndex.size()) {
+        return false;
+    }
+    for (int i = 0; i < count; ++i) {
+        int id = _rowIndex.takeAt(row);
+        _dataHash.remove(id);
+    }
+    endRemoveRows();
+    return true;
 }
 
 SimpleColumn::SimpleColumn(QString name) : AbstractColumnRole (name)
