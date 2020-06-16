@@ -9,29 +9,13 @@ public:
     AbstractColumnRole(QString name);
     virtual ~AbstractColumnRole() = default;
     QString name() { return _name; }
-    virtual QVariant colData(const QVariantMap &rowData, int role = Qt::DisplayRole) = 0;
+    virtual QVariant colData(const QVariantMap &rowData, int role = Qt::DisplayRole);
 private:
     QString _name;
 };
 
-using AbstractColumn = AbstractColumnRole;
-using AbstractRole = AbstractColumnRole;
-
-class SimpleColumn : public AbstractColumnRole
-{
-public:
-    SimpleColumn(QString name);
-
-    QVariant colData(const QVariantMap &rowData, int role) override;
-};
-
-class FullnameColumn : public AbstractColumnRole
-{
-public:
-    FullnameColumn(QString name);
-
-    QVariant colData(const QVariantMap &rowData, int role) override;
-};
+using SimpleColumn = AbstractColumnRole;
+using SimpleRole = AbstractColumnRole;
 
 class VariantMapModel : public QAbstractTableModel
 {
@@ -43,8 +27,8 @@ public:
 
     VariantMapModel(QObject *parent = nullptr);
     VariantMapModel(bool isList, bool autoId = false, bool withHeading = false, QObject *parent = nullptr);
-    void registerColumn(AbstractColumn *column);
-    void registerRole(AbstractRole *role);
+    void registerColumn(AbstractColumnRole *column);
+    void registerRole(AbstractColumnRole *role);
     void addRow(QVariantMap rowData);
     void removeId(int id);
     void removeAllRows();
@@ -72,8 +56,8 @@ public:
 private:
     QList<int> _rowIndex;
     QHash<int, QVariantMap> _dataHash;
-    QList<AbstractColumn*> _columns;
-    QList<AbstractRole*> _roles;
+    QList<AbstractColumnRole*> _columns;
+    QList<AbstractColumnRole*> _roles;
     mutable QHash<int, QByteArray> _rolesId;
     QString _idStr = "id";  ///< строковое представление ключа
     uint _idRow = 0;
