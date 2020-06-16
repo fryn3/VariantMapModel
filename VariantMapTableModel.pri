@@ -1,7 +1,7 @@
 INCLUDEPATH += $$PWD
 
 SOURCES += \
-    $$PWD/variantmaptablemodel.cpp
+    $$PWD/variantmapmodel.cpp
 
 HEADERS += \
-    $$PWD/variantmaptablemodel.h
+    $$PWD/variantmapmodel.h

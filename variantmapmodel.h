@@ -1,5 +1,5 @@
-#ifndef VARIANTMAPTABLEMODEL_H
-#define VARIANTMAPTABLEMODEL_H
+#ifndef VARIANTMAPMODEL_H
+#define VARIANTMAPMODEL_H
 
 #include <QAbstractTableModel>
 
@@ -33,15 +33,15 @@ public:
     QVariant colData(const QVariantMap &rowData, int role) override;
 };
 
-class VariantMapTableModel : public QAbstractTableModel
+class VariantMapModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    static const QString MODULE_NAME;   // "VariantMapTable"
+    static const QString MODULE_NAME;   // "VariantMap"
     static const bool IS_QML_REG;
 
-    VariantMapTableModel(QObject *parent = nullptr);
-    VariantMapTableModel(bool isList, bool autoId = false, bool withHeading = false, QObject *parent = nullptr);
+    VariantMapModel(QObject *parent = nullptr);
+    VariantMapModel(bool isList, bool autoId = false, bool withHeading = false, QObject *parent = nullptr);
     void registerColumn(AbstractColumn *column);
     void registerRole(AbstractRole *role);
     void addRow(QVariantMap rowData);
@@ -87,4 +87,4 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 };
 
-#endif // VARIANTMAPTABLEMODEL_H
+#endif // VARIANTMAPMODEL_H

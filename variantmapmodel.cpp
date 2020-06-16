@@ -1,4 +1,4 @@
-#include "variantmaptablemodel.h"
+#include "variantmapmodel.h"
 
 #include "QQmlEngine"
 #include <QDebug>
@@ -8,36 +8,36 @@
 
 bool registerMe()
 {
-    qmlRegisterType<VariantMapTableModel>(VariantMapTableModel::MODULE_NAME.toUtf8(), 1, 0, "VariantMapTableModel");
+    qmlRegisterType<VariantMapModel>(VariantMapModel::MODULE_NAME.toUtf8(), 1, 0, "VariantMapModel");
     return true;
 }
 
-const QString VariantMapTableModel::MODULE_NAME = "VariantMapTable";
+const QString VariantMapModel::MODULE_NAME = "VariantMap";
 
-const bool VariantMapTableModel::IS_QML_REG = registerMe();
+const bool VariantMapModel::IS_QML_REG = registerMe();
 
 
-VariantMapTableModel::VariantMapTableModel(QObject *parent)
+VariantMapModel::VariantMapModel(QObject *parent)
     : QAbstractTableModel (parent) { }
 
-VariantMapTableModel::VariantMapTableModel(bool isList, bool autoId, bool withHeading, QObject *parent)
+VariantMapModel::VariantMapModel(bool isList, bool autoId, bool withHeading, QObject *parent)
     : QAbstractTableModel (parent), _forListViewFormat(isList), _autoId(autoId),
       _withHeading(withHeading) { }
 
-void VariantMapTableModel::registerColumn(AbstractColumn *column)
+void VariantMapModel::registerColumn(AbstractColumn *column)
 {
     // todo: проверки на повторяемость и тд
     _columns.append(column);
 }
 
-void VariantMapTableModel::registerRole(AbstractRole *role)
+void VariantMapModel::registerRole(AbstractRole *role)
 {
     // todo: можно избавиться от этой ф-ции, а добавлять все лишние роли при addRow
     // todo: проверки на повторяемость и тд
     _roles.append(role);
 }
 
-void VariantMapTableModel::addRow(QVariantMap rowData)
+void VariantMapModel::addRow(QVariantMap rowData)
 {
     int id = _autoId ? ++_idRow : rowData.value(_idStr).toInt();
     beginInsertRows(QModelIndex(), _rowIndex.count(), _rowIndex.count());
@@ -46,18 +46,18 @@ void VariantMapTableModel::addRow(QVariantMap rowData)
     endInsertRows();
 }
 
-QVariantMap VariantMapTableModel::getRowData(int row) const
+QVariantMap VariantMapModel::getRowData(int row) const
 {
     int id = idByRow(row);
     return _dataHash.value(id);
 }
 
-int VariantMapTableModel::idByRow(int row) const
+int VariantMapModel::idByRow(int row) const
 {
     return _rowIndex.at(row);
 }
 
-int VariantMapTableModel::colByName(QString name) const
+int VariantMapModel::colByName(QString name) const
 {
     qDebug() << __PRETTY_FUNCTION__ << "вроде не нужна";
     for (int col = 0; col < _columns.count(); ++col) {
@@ -67,32 +67,32 @@ int VariantMapTableModel::colByName(QString name) const
     return -1;
 }
 
-QString VariantMapTableModel::nameByCol(int col) const
+QString VariantMapModel::nameByCol(int col) const
 {
     return _columns.at(col)->name();
 }
 
-bool VariantMapTableModel::getWithHeading() const
+bool VariantMapModel::getWithHeading() const
 {
     return _withHeading;
 }
 
-void VariantMapTableModel::setWithHeading(bool value)
+void VariantMapModel::setWithHeading(bool value)
 {
     _withHeading = value;
 }
 
-int VariantMapTableModel::calcRow(const QModelIndex &index) const
+int VariantMapModel::calcRow(const QModelIndex &index) const
 {
     return index.row() - _withHeading;
 }
 
-bool VariantMapTableModel::isHeadingRow(const QModelIndex &index) const
+bool VariantMapModel::isHeadingRow(const QModelIndex &index) const
 {
     return calcRow(index) < 0;
 }
 
-QJsonValue VariantMapTableModel::toJson() const
+QJsonValue VariantMapModel::toJson() const
 {
     QJsonArray jArr;
     for (int row = 0; row < _rowIndex.count(); ++row) {
@@ -103,12 +103,12 @@ QJsonValue VariantMapTableModel::toJson() const
     return QJsonValue(jArr);
 }
 
-QCborValue VariantMapTableModel::toCbor() const
+QCborValue VariantMapModel::toCbor() const
 {
     return QCborValue::fromJsonValue(toJson());
 }
 
-QByteArray VariantMapTableModel::toByteArray(bool isJson) const
+QByteArray VariantMapModel::toByteArray(bool isJson) const
 {
     if (isJson) {
         return QJsonDocument(toJson().toObject()).toJson();
@@ -116,7 +116,7 @@ QByteArray VariantMapTableModel::toByteArray(bool isJson) const
     return toCbor().toCbor();
 }
 
-void VariantMapTableModel::fromJson(QJsonValue jValue)
+void VariantMapModel::fromJson(QJsonValue jValue)
 {
     QJsonArray jArr = jValue.toArray();
     for (const auto& jRowRef: jArr) {
@@ -125,7 +125,7 @@ void VariantMapTableModel::fromJson(QJsonValue jValue)
     }
 }
 
-void VariantMapTableModel::fromCbor(QCborValue cborValue)
+void VariantMapModel::fromCbor(QCborValue cborValue)
 {
     QJsonArray jArr = cborValue.toJsonValue().toArray();
     for (const auto& jRowRef: jArr) {
@@ -134,7 +134,7 @@ void VariantMapTableModel::fromCbor(QCborValue cborValue)
     }
 }
 
-void VariantMapTableModel::fromByteArray(QByteArray buff, bool isJson)
+void VariantMapModel::fromByteArray(QByteArray buff, bool isJson)
 {
     if (isJson) {
         fromJson(QJsonDocument::fromJson(buff).array());
@@ -143,49 +143,49 @@ void VariantMapTableModel::fromByteArray(QByteArray buff, bool isJson)
     }
 }
 
-bool VariantMapTableModel::autoId() const
+bool VariantMapModel::autoId() const
 {
     return _autoId;
 }
 
-void VariantMapTableModel::setAutoId(bool autoId)
+void VariantMapModel::setAutoId(bool autoId)
 {
     _autoId = autoId;
 }
 
-QString VariantMapTableModel::getIdStr() const
+QString VariantMapModel::getIdStr() const
 {
     return _idStr;
 }
 
-void VariantMapTableModel::setIdStr(const QString &id)
+void VariantMapModel::setIdStr(const QString &id)
 {
     _idStr = id;
 }
 
-bool VariantMapTableModel::getForListViewFormat() const
+bool VariantMapModel::getForListViewFormat() const
 {
     return _forListViewFormat;
 }
 
-void VariantMapTableModel::setForListViewFormat(bool forListViewFormat)
+void VariantMapModel::setForListViewFormat(bool forListViewFormat)
 {
     _forListViewFormat = forListViewFormat;
 }
 
-int VariantMapTableModel::rowCount(const QModelIndex &parent) const
+int VariantMapModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
     return _rowIndex.count() + _withHeading;
 }
 
-int VariantMapTableModel::columnCount(const QModelIndex &parent) const
+int VariantMapModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
     return _columns.count();
 }
 
-QVariant VariantMapTableModel::data(const QModelIndex &index, int role) const
+QVariant VariantMapModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid()) {
         return QVariant();
@@ -209,7 +209,7 @@ QVariant VariantMapTableModel::data(const QModelIndex &index, int role) const
     }
 }
 
-bool VariantMapTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool VariantMapModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (!index.isValid() || isHeadingRow(index)) {
         return false;
@@ -223,7 +223,7 @@ bool VariantMapTableModel::setData(const QModelIndex &index, const QVariant &val
     return false;
 }
 
-Qt::ItemFlags VariantMapTableModel::flags(const QModelIndex &index) const
+Qt::ItemFlags VariantMapModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid()) {
         return Qt::NoItemFlags;
@@ -231,7 +231,7 @@ Qt::ItemFlags VariantMapTableModel::flags(const QModelIndex &index) const
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
 }
 
-QHash<int, QByteArray> VariantMapTableModel::roleNames() const
+QHash<int, QByteArray> VariantMapModel::roleNames() const
 {
     _rolesId = QAbstractTableModel::roleNames();
     for (int i = 0; i < _columns.size(); ++i) {
