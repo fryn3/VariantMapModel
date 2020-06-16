@@ -8,11 +8,12 @@
 
 bool registerMe()
 {
-    qmlRegisterType<VariantMapModel>(VariantMapModel::MODULE_NAME.toUtf8(), 1, 0, "VariantMapModel");
+    qmlRegisterType<VariantMapModel>(VariantMapModel::MODULE_NAME.toUtf8(), 1, 0, VariantMapModel::ITEM_NAME.toUtf8());
     return true;
 }
 
 const QString VariantMapModel::MODULE_NAME = "VariantMap";
+const QString VariantMapModel::ITEM_NAME = "VariantMapModel";
 
 const bool VariantMapModel::IS_QML_REG = registerMe();
 
@@ -21,7 +22,7 @@ VariantMapModel::VariantMapModel(QObject *parent)
     : QAbstractTableModel (parent) { }
 
 VariantMapModel::VariantMapModel(bool isList, bool autoId, bool withHeading, QObject *parent)
-    : QAbstractTableModel (parent), _forListViewFormat(isList), _autoId(autoId),
+    : QAbstractTableModel (parent), _listViewFormat(isList), _autoId(autoId),
       _withHeading(withHeading) { }
 
 void VariantMapModel::registerColumn(AbstractColumn *column)
@@ -173,14 +174,14 @@ void VariantMapModel::setIdStr(const QString &id)
     _idStr = id;
 }
 
-bool VariantMapModel::getForListViewFormat() const
+bool VariantMapModel::getListViewFormat() const
 {
-    return _forListViewFormat;
+    return _listViewFormat;
 }
 
-void VariantMapModel::setForListViewFormat(bool forListViewFormat)
+void VariantMapModel::setListViewFormat(bool listViewFormat)
 {
-    _forListViewFormat = forListViewFormat;
+    _listViewFormat = listViewFormat;
 }
 
 int VariantMapModel::rowCount(const QModelIndex &parent) const
@@ -200,7 +201,7 @@ QVariant VariantMapModel::data(const QModelIndex &index, int role) const
     if (!index.isValid()) {
         return QVariant();
     }
-    if (role > Qt::UserRole && _forListViewFormat) {
+    if (role >= Qt::UserRole && _listViewFormat) {
         return data(this->index(calcRow(index), role - Qt::UserRole), Qt::DisplayRole);
     }
     if (isHeadingRow(index)) {

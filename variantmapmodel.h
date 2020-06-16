@@ -38,6 +38,7 @@ class VariantMapModel : public QAbstractTableModel
     Q_OBJECT
 public:
     static const QString MODULE_NAME;   // "VariantMap"
+    static const QString ITEM_NAME;     // "VariantMapModel"
     static const bool IS_QML_REG;
 
     VariantMapModel(QObject *parent = nullptr);
@@ -52,8 +53,8 @@ public:
     int idByRow(int row) const;
     int colByName(QString name) const;
     QString nameByCol(int col) const;
-    bool getForListViewFormat() const;
-    void setForListViewFormat(bool forListViewFormat);
+    bool getListViewFormat() const;
+    void setListViewFormat(bool listViewFormat);
     bool autoId() const;
     void setAutoId(bool autoId);
     bool getWithHeading() const;
@@ -76,7 +77,7 @@ private:
     mutable QHash<int, QByteArray> _rolesId;
     QString _idStr = "id";  ///< строковое представление ключа
     uint _idRow = 0;
-    bool _forListViewFormat = false;
+    bool _listViewFormat = false;
     bool _autoId = false;
     bool _withHeading = false;
 
