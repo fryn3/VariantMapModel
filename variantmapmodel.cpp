@@ -1,19 +1,19 @@
 #include "variantmapmodel.h"
 
-#include "QQmlEngine"
+#include <QQmlEngine>
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 
-bool registerMe()
+static bool registerMe()
 {
-    qmlRegisterType<VariantMapModel>(VariantMapModel::MODULE_NAME.toUtf8(), 1, 0, "VariantMapModel");
+    qmlRegisterType<VariantMapModel>(VariantMapModel::MODULE_NAME.toUtf8(), 1, 0, VariantMapModel::ITEM_NAME.toUtf8());
     return true;
 }
 
 const QString VariantMapModel::MODULE_NAME = "VariantMap";
-
+const QString VariantMapModel::ITEM_NAME = "VariantMapModel";
 const bool VariantMapModel::IS_QML_REG = registerMe();
 
 
@@ -21,16 +21,16 @@ VariantMapModel::VariantMapModel(QObject *parent)
     : QAbstractTableModel (parent) { }
 
 VariantMapModel::VariantMapModel(bool isList, bool autoId, bool withHeading, QObject *parent)
-    : QAbstractTableModel (parent), _forListViewFormat(isList), _autoId(autoId),
+    : QAbstractTableModel (parent), _listViewFormat(isList), _autoId(autoId),
       _withHeading(withHeading) { }
 
-void VariantMapModel::registerColumn(AbstractColumn *column)
+void VariantMapModel::registerColumn(AbstractColumnRole *column)
 {
     // todo: проверки на повторяемость и тд
     _columns.append(column);
 }
 
-void VariantMapModel::registerRole(AbstractRole *role)
+void VariantMapModel::registerRole(AbstractColumnRole *role)
 {
     // todo: можно избавиться от этой ф-ции, а добавлять все лишние роли при addRow
     // todo: проверки на повторяемость и тд
@@ -173,14 +173,14 @@ void VariantMapModel::setIdStr(const QString &id)
     _idStr = id;
 }
 
-bool VariantMapModel::getForListViewFormat() const
+bool VariantMapModel::getListViewFormat() const
 {
-    return _forListViewFormat;
+    return _listViewFormat;
 }
 
-void VariantMapModel::setForListViewFormat(bool forListViewFormat)
+void VariantMapModel::setListViewFormat(bool listViewFormat)
 {
-    _forListViewFormat = forListViewFormat;
+    _listViewFormat = listViewFormat;
 }
 
 int VariantMapModel::rowCount(const QModelIndex &parent) const
@@ -200,7 +200,7 @@ QVariant VariantMapModel::data(const QModelIndex &index, int role) const
     if (!index.isValid()) {
         return QVariant();
     }
-    if (role >= Qt::UserRole && _forListViewFormat) {
+    if (role >= Qt::UserRole && _listViewFormat) {
         return data(this->index(index.row(), role - Qt::UserRole), Qt::DisplayRole);
     }
     if (isHeadingRow(index)) {
@@ -271,33 +271,13 @@ bool VariantMapModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
-SimpleColumn::SimpleColumn(QString name) : AbstractColumnRole (name)
-{
+AbstractColumnRole::AbstractColumnRole(QString name) : _name(name) { }
 
-}
-
-QVariant SimpleColumn::colData(const QVariantMap &rowData, int role)
+QVariant AbstractColumnRole::colData(const QVariantMap &rowData, int role)
 {
     if (role != Qt::DisplayRole) {
+        qDebug() << __PRETTY_FUNCTION__;
         return QVariant();
     }
     return rowData.value(name());
-}
-
-AbstractColumnRole::AbstractColumnRole(QString name) : _name(name)
-{
-
-}
-
-FullnameColumn::FullnameColumn(QString name) : AbstractColumnRole (name)
-{
-
-}
-
-QVariant FullnameColumn::colData(const QVariantMap &rowData, int role)
-{
-    if (role != Qt::DisplayRole) {
-        return QVariant();
-    }
-    return rowData.value("firstname").toString() + " " + rowData.value("lastname").toString();
 }
