@@ -200,13 +200,14 @@ QVariant VariantMapModel::data(const QModelIndex &index, int role) const
     if (!index.isValid()) {
         return QVariant();
     }
-    if (role > Qt::UserRole && _forListViewFormat) {
-        return data(this->index(calcRow(index), role - Qt::UserRole), Qt::DisplayRole);
+    if (role >= Qt::UserRole && _forListViewFormat) {
+        return data(this->index(index.row(), role - Qt::UserRole), Qt::DisplayRole);
     }
     if (isHeadingRow(index)) {
         if (role == Qt::DisplayRole) {
             return _columns.at(index.column())->name();
         } else {
+            qDebug() << __PRETTY_FUNCTION__ << ":" << __LINE__;
             return QVariant();
         }
     }
@@ -246,7 +247,7 @@ Qt::ItemFlags VariantMapModel::flags(const QModelIndex &index) const
 
 QHash<int, QByteArray> VariantMapModel::roleNames() const
 {
-    _rolesId = QAbstractTableModel::roleNames();
+//    _rolesId = QAbstractTableModel::roleNames();
     for (int i = 0; i < _columns.size(); ++i) {
         _rolesId.insert(Qt::UserRole + i, _columns.at(i)->name().toUtf8());
     }
