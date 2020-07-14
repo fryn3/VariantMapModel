@@ -29,7 +29,7 @@ public:
     VariantMapModel(bool isList, bool autoId = false, bool withHeading = false, QObject *parent = nullptr);
     void registerColumn(AbstractColumnRole *column);
     void registerRole(AbstractColumnRole *role);
-    void addRow(QVariantMap rowData);
+    virtual void addRow(const QVariantMap &rowData);
     void removeId(int id);
     void removeAllRows();
 

@@ -37,7 +37,7 @@ void VariantMapModel::registerRole(AbstractColumnRole *role)
     _roles.append(role);
 }
 
-void VariantMapModel::addRow(QVariantMap rowData)
+void VariantMapModel::addRow(const QVariantMap &rowData)
 {
     int id = _autoId ? ++_idRow : rowData.value(_idStr).toInt();
     beginInsertRows(QModelIndex(), _rowIndex.count(), _rowIndex.count());
@@ -228,6 +228,7 @@ bool VariantMapModel::setData(const QModelIndex &index, const QVariant &value, i
     if (role >= Qt::UserRole) {
         return setData(this->index(calcRow(index), role - Qt::UserRole), value, Qt::EditRole);
     }
+    qDebug() << __PRETTY_FUNCTION__ << index.row() << index.column() << value;
     if (role == Qt::EditRole) {
         int id = idByRow(calcRow(index));
         _dataHash[id].insert(nameByCol(index.column()), value);
