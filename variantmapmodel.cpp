@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QCryptographicHash>
 
 static bool registerMe()
 {
@@ -150,6 +151,11 @@ void VariantMapModel::fromByteArray(QByteArray buff, bool isJson)
     } else {
         fromCbor(QCborValue::fromCbor(buff));
     }
+}
+
+QByteArray VariantMapModel::hash() const
+{
+    return QCryptographicHash::hash(toByteArray(false), QCryptographicHash::Algorithm::Md5);
 }
 
 bool VariantMapModel::autoId() const

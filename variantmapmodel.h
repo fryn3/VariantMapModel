@@ -31,7 +31,7 @@ public:
     void registerRole(AbstractColumnRole *role);
     virtual void addRow(const QVariantMap &rowData);
     void removeId(int id);
-    void removeAllRows();
+    Q_INVOKABLE void removeAllRows();
 
     QVariantMap getRowData(int row) const;
     int idByRow(int row) const;
@@ -53,6 +53,7 @@ public:
     void fromJson(QJsonValue jValue);
     void fromCbor(QCborValue cborValue);
     void fromByteArray(QByteArray buff, bool isJson);
+    QByteArray hash() const;
 protected:
     mutable QHash<int, QByteArray> _rolesId;
 private:
