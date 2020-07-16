@@ -45,6 +45,7 @@ void VariantMapModel::addRow(const QVariantMap &rowData)
     _rowIndex.append(id);
     _dataHash.insert(id, rowData);
     endInsertRows();
+    emit dataChanged(QModelIndex(), QModelIndex());
 }
 
 void VariantMapModel::removeId(int id)
@@ -264,6 +265,22 @@ QHash<int, QByteArray> VariantMapModel::roleNames() const
     return _rolesId;
 }
 
+bool VariantMapModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+    if (!_autoId) {
+        return QAbstractTableModel::insertRows(row, count, parent);
+    }
+    beginInsertRows(parent, row, row + count);
+    for (int i = 0; i < count; ++i) {
+        int id = ++_idRow;
+        _rowIndex.insert(row + i, id);
+        _dataHash.insert(id, QVariantMap());
+    }
+    endInsertRows();
+    emit dataChanged(parent, parent);
+    return true;
+}
+
 bool VariantMapModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     beginRemoveRows(parent, row, row + count - 1);
@@ -275,6 +292,7 @@ bool VariantMapModel::removeRows(int row, int count, const QModelIndex &parent)
         _dataHash.remove(id);
     }
     endRemoveRows();
+    emit dataChanged(parent, parent);
     return true;
 }
 
