@@ -53,12 +53,13 @@ public:
     void fromJson(QJsonValue jValue);
     void fromCbor(QCborValue cborValue);
     void fromByteArray(QByteArray buff, bool isJson);
+protected:
+    mutable QHash<int, QByteArray> _rolesId;
 private:
     QList<int> _rowIndex;
     QHash<int, QVariantMap> _dataHash;
     QList<AbstractColumnRole*> _columns;
     QList<AbstractColumnRole*> _roles;
-    mutable QHash<int, QByteArray> _rolesId;
     QString _idStr = "id";  ///< строковое представление ключа
     uint _idRow = 0;
     bool _listViewFormat = false;

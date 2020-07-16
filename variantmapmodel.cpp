@@ -69,7 +69,6 @@ int VariantMapModel::idByRow(int row) const
 
 int VariantMapModel::colByName(QString name) const
 {
-    qDebug() << __PRETTY_FUNCTION__ << "вроде не нужна";
     for (int col = 0; col < _columns.count(); ++col) {
         if (nameByCol(col) == name)
             return col;
@@ -215,7 +214,7 @@ QVariant VariantMapModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         return _columns.at(index.column())->colData(rowData, role);
     } else {
-        qDebug() << rowData[_rolesId[role]];
+        qDebug() << __PRETTY_FUNCTION__ << ":" << __LINE__ << rowData[_rolesId[role]];
         return rowData[_rolesId[role]];
     }
 }
@@ -228,7 +227,7 @@ bool VariantMapModel::setData(const QModelIndex &index, const QVariant &value, i
     if (role >= Qt::UserRole) {
         return setData(this->index(calcRow(index), role - Qt::UserRole), value, Qt::EditRole);
     }
-    qDebug() << __PRETTY_FUNCTION__ << index.row() << index.column() << value;
+    qDebug() << __PRETTY_FUNCTION__ << index.row() << index.column() << value << role;
     if (role == Qt::EditRole) {
         int id = idByRow(calcRow(index));
         _dataHash[id].insert(nameByCol(index.column()), value);
@@ -248,6 +247,7 @@ Qt::ItemFlags VariantMapModel::flags(const QModelIndex &index) const
 
 QHash<int, QByteArray> VariantMapModel::roleNames() const
 {
+    if (!_rolesId.isEmpty()) { return _rolesId; }
 //    _rolesId = QAbstractTableModel::roleNames();
     for (int i = 0; i < _columns.size(); ++i) {
         _rolesId.insert(Qt::UserRole + i, _columns.at(i)->name().toUtf8());
