@@ -45,7 +45,7 @@ void VariantMapModel::addRow(const QVariantMap &rowData)
     _rowIndex.append(id);
     _dataHash.insert(id, rowData);
     endInsertRows();
-    emit dataChanged(QModelIndex(), QModelIndex());
+    emit dataChanged(index(_rowIndex.count(), 0), index(_rowIndex.count(), columnCount()));
 }
 
 void VariantMapModel::removeId(int id)
@@ -292,7 +292,7 @@ bool VariantMapModel::removeRows(int row, int count, const QModelIndex &parent)
         _dataHash.remove(id);
     }
     endRemoveRows();
-    emit dataChanged(parent, parent);
+    emit dataChanged(index(row, 0), index(row + count - 1, columnCount(parent)));
     return true;
 }
 
