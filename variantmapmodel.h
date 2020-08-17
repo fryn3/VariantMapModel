@@ -55,7 +55,8 @@ public:
     void fromByteArray(QByteArray buff, bool isJson);
     QByteArray hash() const;
 protected:
-    mutable QHash<int, QByteArray> _rolesId;
+    QString roleStr(int role) const;
+    int roleInt(QString role) const;
 private:
     QList<int> _rowIndex;
     QHash<int, QVariantMap> _dataHash;
@@ -66,6 +67,7 @@ private:
     bool _listViewFormat = false;
     bool _autoId = false;
     bool _withHeading = false;
+    mutable QHash<int, QByteArray> _rolesId;
 
 public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;

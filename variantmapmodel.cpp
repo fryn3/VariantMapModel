@@ -159,6 +159,22 @@ QByteArray VariantMapModel::hash() const
     return QCryptographicHash::hash(toByteArray(false), QCryptographicHash::Algorithm::Md5);
 }
 
+QString VariantMapModel::roleStr(int role) const
+{
+    return roleNames().value(role);
+}
+
+int VariantMapModel::roleInt(QString role) const
+{
+    QHash<int, QByteArray> roleId = roleNames();
+    for (auto it = roleId.cbegin(); it != roleId.cend(); ++it) {
+        if (it.value() == role) {
+            return it.key();
+        }
+    }
+    return -1;
+}
+
 bool VariantMapModel::autoId() const
 {
     return _autoId;
