@@ -21,9 +21,8 @@ const bool VariantMapModel::IS_QML_REG = registerMe();
 VariantMapModel::VariantMapModel(QObject *parent)
     : QAbstractTableModel (parent) { }
 
-VariantMapModel::VariantMapModel(bool isList, bool autoId, bool withHeading, QObject *parent)
-    : QAbstractTableModel (parent), _listViewFormat(isList), _autoId(autoId),
-      _withHeading(withHeading) { }
+VariantMapModel::VariantMapModel(bool isList, bool autoId, QObject *parent)
+    : QAbstractTableModel (parent), _listViewFormat(isList), _autoId(autoId) { }
 
 void VariantMapModel::registerColumn(AbstractColumnRole *column)
 {
@@ -81,26 +80,6 @@ int VariantMapModel::colByName(QString name) const
 QString VariantMapModel::nameByCol(int col) const
 {
     return _columns.at(col)->name();
-}
-
-bool VariantMapModel::getWithHeading() const
-{
-    return _withHeading;
-}
-
-void VariantMapModel::setWithHeading(bool value)
-{
-    _withHeading = value;
-}
-
-int VariantMapModel::calcRow(const QModelIndex &index) const
-{
-    return index.row() - _withHeading;
-}
-
-bool VariantMapModel::isHeadingRow(const QModelIndex &index) const
-{
-    return calcRow(index) < 0;
 }
 
 QJsonValue VariantMapModel::toJson() const
@@ -208,7 +187,7 @@ void VariantMapModel::setListViewFormat(bool listViewFormat)
 int VariantMapModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
-    return _rowIndex.count() + _withHeading;
+    return _rowIndex.count();
 }
 
 int VariantMapModel::columnCount(const QModelIndex &parent) const
@@ -219,21 +198,12 @@ int VariantMapModel::columnCount(const QModelIndex &parent) const
 
 QVariant VariantMapModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid()) {
-        return QVariant();
-    }
+    if (!index.isValid()) { return QVariant(); }
+
     if (role >= Qt::UserRole && _listViewFormat) {
         return data(this->index(index.row(), role - Qt::UserRole), Qt::DisplayRole);
     }
-    if (isHeadingRow(index)) {
-        if (role == Qt::DisplayRole) {
-            return _columns.at(index.column())->name();
-        } else {
-            qDebug() << __PRETTY_FUNCTION__ << ":" << __LINE__;
-            return QVariant();
-        }
-    }
-    QVariantMap rowData = getRowData(calcRow(index));
+    QVariantMap rowData = getRowData(index.row());
     if (role == Qt::DisplayRole) {
         return _columns.at(index.column())->colData(rowData, role);
     } else {
@@ -244,15 +214,14 @@ QVariant VariantMapModel::data(const QModelIndex &index, int role) const
 
 bool VariantMapModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (!index.isValid() || isHeadingRow(index)) {
-        return false;
-    }
+    if (!index.isValid()) { return false; }
+
     if (role >= Qt::UserRole) {
-        return setData(this->index(calcRow(index), role - Qt::UserRole), value, Qt::EditRole);
+        return setData(this->index(index.row(), role - Qt::UserRole), value, Qt::EditRole);
     }
     qDebug() << __PRETTY_FUNCTION__ << index.row() << index.column() << value << role;
     if (role == Qt::EditRole) {
-        int id = idByRow(calcRow(index));
+        int id = idByRow(index.row());
         _dataHash[id].insert(nameByCol(index.column()), value);
         emit dataChanged(index, index);
         return true;

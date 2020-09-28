@@ -26,7 +26,7 @@ public:
     static const bool IS_QML_REG;
 
     VariantMapModel(QObject *parent = nullptr);
-    VariantMapModel(bool isList, bool autoId = false, bool withHeading = false, QObject *parent = nullptr);
+    VariantMapModel(bool isList, bool autoId = false, QObject *parent = nullptr);
     void registerColumn(AbstractColumnRole *column);
     void registerRole(AbstractColumnRole *role);
     virtual void addRow(const QVariantMap &rowData);
@@ -41,12 +41,8 @@ public:
     void setListViewFormat(bool listViewFormat);
     bool autoId() const;
     void setAutoId(bool autoId);
-    bool getWithHeading() const;
-    void setWithHeading(bool value);
     QString getIdStr() const;
     void setIdStr(const QString &id);
-    int calcRow(const QModelIndex &index) const;
-    bool isHeadingRow(const QModelIndex &index) const;
     QJsonValue toJson() const;
     QCborValue toCbor() const;
     QByteArray toByteArray(bool isJson) const;
@@ -66,7 +62,6 @@ private:
     uint _idRow = 0;
     bool _listViewFormat = false;
     bool _autoId = false;
-    bool _withHeading = false;
     mutable QHash<int, QByteArray> _rolesId;
 
 public:
