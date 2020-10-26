@@ -32,29 +32,42 @@ void VariantMapModel::registerColumn(AbstractColumnRole *column)
 
 void VariantMapModel::registerRole(AbstractColumnRole *role)
 {
-    // todo: можно избавиться от этой ф-ции, а добавлять все лишние роли при addRow
     // todo: проверки на повторяемость и тд
     _roles.append(role);
 }
 
-void VariantMapModel::addRow(const QVariantMap &rowData)
+bool VariantMapModel::addRow(const QVariantMap &rowData)
 {
-    int id = _autoId ? ++_idRow : rowData.value(_idStr).toInt();
+    int id;
+    if (_autoId) {
+        id = ++_idRow;
+    } else if (rowData.contains(_idStr)) {
+        bool ok;
+        id = rowData.value(_idStr).toInt(&ok);
+        if (!ok) {
+            qDebug() << __PRETTY_FUNCTION__ << "Bad cast key";
+            return false;
+        }
+    } else {
+        qDebug() << __PRETTY_FUNCTION__ << "Can't find key";
+        return false;
+    }
     beginInsertRows(QModelIndex(), _rowIndex.count(), _rowIndex.count());
     _rowIndex.append(id);
     _dataHash.insert(id, rowData);
     endInsertRows();
     emit dataChanged(index(_rowIndex.count(), 0), index(_rowIndex.count(), columnCount()));
+    return true;
 }
 
-void VariantMapModel::removeId(int id)
+bool VariantMapModel::removeId(int id)
 {
-    removeRow(_rowIndex.indexOf(id));
+    return removeRow(_rowIndex.indexOf(id));
 }
 
-void VariantMapModel::removeAllRows()
+bool VariantMapModel::removeAllRows()
 {
-    removeRows(0, _rowIndex.size());
+    return removeRows(0, _rowIndex.size());
 }
 
 QVariantMap VariantMapModel::getRowData(int row) const
